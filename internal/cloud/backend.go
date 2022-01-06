@@ -445,6 +445,15 @@ func (b *Cloud) Workspace(name string) (*tfe.Workspace, error) {
 	return workspace, nil
 }
 
+func (b *Cloud) WorkspaceWithOutputs(name string) (*tfe.Workspace, error) {
+	options := &tfe.WorkspaceReadOptions{Include: "outputs"}
+	workspace, err := b.client.Workspaces.ReadWithOptions(context.Background(), b.organization, name, options)
+	if err != nil {
+		return nil, err
+	}
+	return workspace, nil
+}
+
 // Workspaces implements backend.Enhanced, returning a filtered list of workspace names according to
 // the workspace mapping strategy configured.
 func (b *Cloud) Workspaces() ([]string, error) {
@@ -605,6 +614,16 @@ func (b *Cloud) StateMgr(name string) (statemgr.Full, error) {
 	}
 
 	return &remote.State{Client: client}, nil
+}
+
+// Return the WorkspaceOutputs from TFC
+func (b *Cloud) WorkspaceOutputs(name string) ([]*tfe.WorkspaceOutputs, error) {
+	w, err := b.WorkspaceWithOutputs(name)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve workspace %s information: %v", name, err)
+	}
+
+	return w.Outputs, nil
 }
 
 // Operation implements backend.Enhanced.
